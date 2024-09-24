@@ -60,6 +60,29 @@ auth.post(
 			);
 		}
 
+		const [accessToken, refreshToken] = await Promise.all([
+			await sign(
+				{
+					id: user.id,
+					email: user.email,
+					role: user.role,
+					exp: Math.floor(Date.now() / 1000) + 60 * 5,
+				},
+				Bun.env.JWT_SECRET as string
+			),
+			// TODO: create refresh token like THIS and create it at database
+			await sign(
+				{
+					id: user.id,
+					email: user.email,
+					role: user.role,
+					exp: Math.floor(Date.now() / 1000) + 60 * 5,
+				},
+				Bun.env.JWT_SECRET as string
+			),
+			// 
+		]);
+
 		const token = await sign(
 			{
 				id: user.id,
@@ -67,7 +90,7 @@ auth.post(
 				role: user.role,
 				exp: Math.floor(Date.now() / 1000) + 60 * 5,
 			},
-			"secret"
+			Bun.env.JWT_SECRET as string
 		);
 
 		return c.json(createSuccessResponse({ data: { token } }));

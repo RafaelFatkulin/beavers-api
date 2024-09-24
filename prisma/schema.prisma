@@ -22,9 +22,22 @@ model User {
   password String  @db.VarChar(63)
   role     Role
 
+  tokens RefreshToken[]
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index(fields: [email], type: Hash)
   @@map("users")
+}
+
+model RefreshToken {
+  id Int @id @default(autoincrement())
+  token String
+  issuedAt DateTime @default(now())
+  expiresAt DateTime
+  revoked Boolean @default(false)
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+
+  @@map("refresh_tokens")
 }

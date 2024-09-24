@@ -1,25 +1,25 @@
-export const createSuccessResponse = <T>({
-    message,
-    data
-}: {
-    message?: string | null,
-    data?: T
+export const createSuccessResponse = <T>({     
+	message,
+	data, 
+}: { 
+	message?: string | null;
+	data?: T;
 }) => {
-    return {
-        success: true,
-        message: message ?? null,
-        data
-    }
-}
+	return {
+		success: true,
+		message: message ?? null,
+		data,
+	};
+};
 
 export const createErrorResponse = ({
-    message,
+	message,
 }: {
-    message?: string | Record<string, string>
+	message?: string | Record<string, string>;
 }) => {
-    return {
-        success: false,
-        message,
-        data: null
-    }
-}
+	return {
+		success: false,
+		message,
+		data: null,
+	};
+};

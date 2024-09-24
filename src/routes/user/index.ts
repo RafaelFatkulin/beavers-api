@@ -10,25 +10,28 @@ import { zValidator } from "@hono/zod-validator";
 import { createUserSchema, updateUserSchema } from "./user.schema";
 import { jwt } from "hono/jwt";
 import { HTTPException } from "hono/http-exception";
+import { authMiddleware } from "../../middleware/bearerAuth";
 
 export const users = new Hono().basePath("/users");
 
 users
-	.use("*", (c, next) => {
-		return jwt({
-			secret: "secret",
-		})(c, next);
-	})
-	.get("/", async (c) => {
-		return c.json(
-			createSuccessResponse({
-				data: excludeFromList(await prisma.user.findMany(), [
-					"password",
-					"updatedAt",
-					"createdAt",
-				]),
-			})
-		);
+	// .use("*", (c, next) => {
+	// 	return jwt({
+	// 		secret: "secret",
+	// 	})(c, next);
+	// })
+	.get("/", 
+		(c, next) => authMiddleware(c, next, 'ADMIN'), 
+		async (c) => {
+			return c.json(
+				createSuccessResponse({
+					data: excludeFromList(await prisma.user.findMany(), [
+						"password",
+						"updatedAt",
+						"createdAt",
+					]),
+				})
+			);
 	})
 	.get("/:id", async (c) => {
 		const user = await prisma.user.findUnique({
@@ -39,12 +42,6 @@ users
 
 		if (!user) {
 			throw new HTTPException(404, { message: "Пользователь не найден" });
-			return c.json(
-				createErrorResponse({
-					message: "Пользователь не найден",
-				}),
-				404
-			);
 		}
 
 		return c.json(
