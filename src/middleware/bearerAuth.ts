@@ -1,6 +1,7 @@
 import { Context, Next } from "hono";
 import { verify } from "hono/jwt";
 import { createErrorResponse } from "../helpers";
+import { Role } from "@prisma/client";
 
 export const verifyToken = async(token: string, secret: string) => {
     try {
@@ -10,10 +11,9 @@ export const verifyToken = async(token: string, secret: string) => {
     }
 }
 
+// TODO: ADD MULTIPLE ROLES HERE
 export const authMiddleware = async (c: Context, next: Next, requiredRole: string) => {
-    const token = c.req.header("Authorization");
-    console.log(token);
-    
+    const token = c.req.header("Authorization")?.split(' ')[1];
 
     if(!token) {
         return c.json(
@@ -25,7 +25,7 @@ export const authMiddleware = async (c: Context, next: Next, requiredRole: strin
     }
 
     const decoded = await verifyToken(token, Bun.env.JWT_SECRET as string);
-    console.log(decoded);
+    console.log('decoded',decoded);
 
     if(!decoded) {
         return c.json(
@@ -33,6 +33,15 @@ export const authMiddleware = async (c: Context, next: Next, requiredRole: strin
                 message: "Токен недействителен"
             }),
             401
+        )
+    }
+
+    if(decoded.role !== requiredRole) {
+        return c.json(
+            createErrorResponse({
+                message: "Доступ запрещен"
+            }),
+            403
         )
     }
 

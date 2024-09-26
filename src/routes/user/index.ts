@@ -15,14 +15,12 @@ import { authMiddleware } from "../../middleware/bearerAuth";
 export const users = new Hono().basePath("/users");
 
 users
-	// .use("*", (c, next) => {
-	// 	return jwt({
-	// 		secret: "secret",
-	// 	})(c, next);
-	// })
+	.use("*", (c, next) => authMiddleware(c, next, 'MANAGER'))
 	.get("/", 
-		(c, next) => authMiddleware(c, next, 'ADMIN'), 
+		// (c, next) => authMiddleware(c, next, 'ADMIN'), 
 		async (c) => {
+			console.log(c.get('jwtPayload'));
+			
 			return c.json(
 				createSuccessResponse({
 					data: excludeFromList(await prisma.user.findMany(), [

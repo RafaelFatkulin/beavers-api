@@ -76,12 +76,21 @@ auth.post(
 					id: user.id,
 					email: user.email,
 					role: user.role,
-					exp: Math.floor(Date.now() / 1000) + 60 * 5,
+					exp: Math.floor(Date.now() + 7 * 24 * 60 * 60 * 1000),
 				},
-				Bun.env.JWT_SECRET as string
+				Bun.env.JWT_SECRET as string,
+				"HS256"
 			),
-			// 
 		]);
+
+		await prisma.refreshToken.create({
+			data: {
+				token: refreshToken,
+				userId: user.id,
+				issuedAt: new Date(),
+				expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+			}
+		})
 
 		const token = await sign(
 			{
