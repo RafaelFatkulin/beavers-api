@@ -1,20 +1,12 @@
 import { Context, Next } from "hono";
-import { verify } from "hono/jwt";
-import { createErrorResponse } from "../helpers";
+import { verify, jwt } from "hono/jwt";
+import { createErrorResponse, prisma } from "../helpers";
 import { Role } from "@prisma/client";
 
-export const verifyToken = async(token: string, secret: string) => {
-    try {
-        return await verify(token, secret)
-    } catch (error: any) {
-        return null
-    }
-}
-
-// TODO: ADD MULTIPLE ROLES HERE
-export const authMiddleware = async (c: Context, next: Next, requiredRole: string) => {
+export const authMiddleware = async (c: Context, next: Next, requiredRoles?: Role[]) => {
     const token = c.req.header("Authorization")?.split(' ')[1];
-
+    console.log(token);
+    
     if(!token) {
         return c.json(
             createErrorResponse({
@@ -24,10 +16,11 @@ export const authMiddleware = async (c: Context, next: Next, requiredRole: strin
         )
     }
 
-    const decoded = await verifyToken(token, Bun.env.JWT_SECRET as string);
-    console.log('decoded',decoded);
+    let decoded;
 
-    if(!decoded) {
+    try {
+        decoded = await verify(token, Bun.env.ACCESS_SECRET!, 'HS256');
+    } catch (err) {
         return c.json(
             createErrorResponse({
                 message: "Токен недействителен"
@@ -36,7 +29,22 @@ export const authMiddleware = async (c: Context, next: Next, requiredRole: strin
         )
     }
 
-    if(decoded.role !== requiredRole) {
+    const user = await prisma.user.findUnique({
+        where: {
+            id: Number(decoded.id)
+        }
+    })
+
+    if(!user) {
+        return c.json(
+            createErrorResponse({
+                message: "Доступ запрещен"
+            }),
+            403
+        )
+    }
+    
+    if(requiredRoles && !requiredRoles.includes(user.role)) {
         return c.json(
             createErrorResponse({
                 message: "Доступ запрещен"

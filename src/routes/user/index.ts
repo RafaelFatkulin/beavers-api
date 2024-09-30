@@ -15,9 +15,8 @@ import { authMiddleware } from "../../middleware/bearerAuth";
 export const users = new Hono().basePath("/users");
 
 users
-	.use("*", (c, next) => authMiddleware(c, next, 'MANAGER'))
+	.use("*", (c, next) => authMiddleware(c, next, ['ADMIN', 'MANAGER']))
 	.get("/", 
-		// (c, next) => authMiddleware(c, next, 'ADMIN'), 
 		async (c) => {
 			console.log(c.get('jwtPayload'));
 			
