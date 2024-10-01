@@ -9,7 +9,7 @@ CREATE TABLE "users" (
     "phone" VARCHAR(15),
     "avatar" VARCHAR(255),
     "password" VARCHAR(63) NOT NULL,
-    "role" "Role" NOT NULL,
+    "role" "Role" NOT NULL DEFAULT 'MANAGER',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -20,10 +20,10 @@ CREATE TABLE "users" (
 CREATE TABLE "refresh_tokens" (
     "id" SERIAL NOT NULL,
     "token" TEXT NOT NULL,
-    "issuedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "issued_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expires_at" TIMESTAMP(3) NOT NULL,
     "revoked" BOOLEAN NOT NULL DEFAULT false,
-    "userId" INTEGER NOT NULL,
+    "user_id" INTEGER NOT NULL,
 
     CONSTRAINT "refresh_tokens_pkey" PRIMARY KEY ("id")
 );
@@ -32,4 +32,4 @@ CREATE TABLE "refresh_tokens" (
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- AddForeignKey
-ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
