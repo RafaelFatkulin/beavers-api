@@ -23,3 +23,9 @@ export const signupSchema = z.object({
 		.min(8, { message: "Пароль должен содержать не менее 8 символов" }),
 	role: z.enum(["ADMIN", "LOGISTICIAN", "MANAGER"]).optional(),
 });
+
+export const signoutSchema = z.object({
+	refreshToken: z.string().optional(),
+});
+
+export const refreshSchema = signoutSchema;

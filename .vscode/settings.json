@@ -32,5 +32,13 @@
 	"typescript.format.placeOpenBraceOnNewLineForControlBlocks": true,
 	"[typescript]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"workbench.colorCustomizations": {
+		"editor.lineHighlightBackground": "#1073cf2d",
+		"editor.lineHighlightBorder": "#9fced11f",
+		"editorGhostText.foreground": "#FF47E9",
+		"activityBar.background": "#2C2B43",
+		"titleBar.activeBackground": "#3D3C5E",
+		"titleBar.activeForeground": "#FBFBFD"
 	}
 }

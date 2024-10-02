@@ -1,18 +1,23 @@
+import { JWTPayload } from "hono/utils/jwt/types";
 import { zValidator } from "@hono/zod-validator";
 import { setCookie, getCookie, deleteCookie } from "hono/cookie";
 import { Hono } from "hono";
-import { signinSchema, signupSchema } from "./auth.schema";
+import {
+	refreshSchema,
+	signinSchema,
+	signoutSchema,
+	signupSchema,
+} from "./auth.schema";
 import {
 	createErrorResponse,
 	createSuccessResponse,
 	prisma,
 } from "../../helpers";
 import { generateTokens, refreshTokenCookieOptions } from "./auth.handler";
-import { verify } from "hono/jwt";
 
 export const auth = new Hono().basePath("/auth");
 
-auth.post("/sighup", zValidator("json", signupSchema), async (c) => {
+auth.post("/signup", zValidator("json", signupSchema), async (c) => {
 	const { fullName, email, password, role } = c.req.valid("json");
 
 	const existingUser = await prisma.user.findUnique({
@@ -30,12 +35,14 @@ auth.post("/sighup", zValidator("json", signupSchema), async (c) => {
 		);
 	}
 
+	console.log(fullName, email, password, role);
+
 	const user = await prisma.user.create({
 		data: {
 			fullName,
 			email,
 			role,
-			password: await Bun.password.hash(password),
+			password: await Bun.password.hash(password, "bcrypt"),
 		},
 	});
 
@@ -133,24 +140,65 @@ auth.post("/signin", zValidator("json", signinSchema), async (c) => {
 	);
 });
 
-auth.post("/signout", async (c) => {
+auth.post("/signout", zValidator("json", signoutSchema), async (c) => {
+	const { refreshToken } = c.req.valid("json");
 	const refreshTokenCookie = getCookie(c, "refreshToken");
 
-	if (!refreshTokenCookie) {
+	const tokenToRefresh = refreshTokenCookie || refreshToken;
+
+	if (!tokenToRefresh) {
 		return c.json(
 			createErrorResponse({
 				message: "",
 			}),
-			204
+			404
 		);
 	}
 
-	const refreshToken = verify(refreshTokenCookie, Bun.env.REFRESH_SECRET!);
+	const existingRefreshToken = await prisma.refreshToken.findFirst({
+		where: {
+			token: tokenToRefresh,
+		},
+	});
+
+	if (!existingRefreshToken || existingRefreshToken.revoked) {
+		return c.json(
+			createErrorResponse({
+				message: "",
+			}),
+			404
+		);
+	}
+
+	const success = await prisma.refreshToken.update({
+		where: {
+			id: existingRefreshToken.id,
+		},
+		data: {
+			revoked: true,
+		},
+	});
+
+	if (!success) {
+		return c.json(
+			createErrorResponse({
+				message: "",
+			}),
+			404
+		);
+	}
+
+	deleteCookie(c, "refreshToken", refreshTokenCookieOptions);
 
 	return c.json(
 		createSuccessResponse({
 			data: null,
+			message: "Вы вышли из аккаунта",
 		}),
 		200
 	);
+});
+
+auth.post("/refresh", zValidator("json", refreshSchema), async (c) => {
+	const { refreshToken } = c.req.valid("json");
 });
