@@ -1,4 +1,4 @@
-import { JWTPayload } from "hono/utils/jwt/types";
+import { verify } from "hono/jwt";
 import { zValidator } from "@hono/zod-validator";
 import { setCookie, getCookie, deleteCookie } from "hono/cookie";
 import { Hono } from "hono";
@@ -14,8 +14,12 @@ import {
 	prisma,
 } from "../../helpers";
 import { generateTokens, refreshTokenCookieOptions } from "./auth.handler";
+import { authMiddleware } from "../../middleware/bearerAuth";
+import { User } from "@prisma/client";
 
-export const auth = new Hono().basePath("/auth");
+export const auth = new Hono<{ Variables: { user: unknown } }>().basePath(
+	"/auth"
+);
 
 auth.post("/signup", zValidator("json", signupSchema), async (c) => {
 	const { fullName, email, password, role } = c.req.valid("json");
@@ -151,7 +155,7 @@ auth.post("/signout", zValidator("json", signoutSchema), async (c) => {
 			createErrorResponse({
 				message: "",
 			}),
-			404
+			400
 		);
 	}
 
@@ -166,7 +170,7 @@ auth.post("/signout", zValidator("json", signoutSchema), async (c) => {
 			createErrorResponse({
 				message: "",
 			}),
-			404
+			400
 		);
 	}
 
@@ -184,7 +188,7 @@ auth.post("/signout", zValidator("json", signoutSchema), async (c) => {
 			createErrorResponse({
 				message: "",
 			}),
-			404
+			400
 		);
 	}
 
@@ -201,4 +205,99 @@ auth.post("/signout", zValidator("json", signoutSchema), async (c) => {
 
 auth.post("/refresh", zValidator("json", refreshSchema), async (c) => {
 	const { refreshToken } = c.req.valid("json");
+	const refreshTokenCookie = getCookie(c, "refreshToken");
+
+	const tokenToRefresh = refreshTokenCookie || refreshToken;
+
+	if (!tokenToRefresh) {
+		return c.json(
+			createErrorResponse({
+				message: "You need a valid refresh token",
+			}),
+			400
+		);
+	}
+
+	const existingRefreshToken = await prisma.refreshToken.findFirst({
+		where: {
+			token: tokenToRefresh,
+		},
+	});
+
+	if (!existingRefreshToken || existingRefreshToken.revoked) {
+		return c.json(
+			createErrorResponse({
+				message: "You need a valid refresh token",
+			}),
+			400
+		);
+	}
+
+	const user = await prisma.user.findUnique({
+		where: {
+			id: existingRefreshToken.userId,
+		},
+	});
+
+	if (!user) {
+		return c.json(
+			createErrorResponse({
+				message: "You need a valid refresh token",
+			}),
+			400
+		);
+	}
+
+	const {
+		accessToken,
+		refreshToken: newRefreshToken,
+		refreshExpiresAt,
+	} = await generateTokens(user.id, user.role);
+
+	await prisma.refreshToken.update({
+		where: {
+			id: existingRefreshToken.id,
+		},
+		data: {
+			token: newRefreshToken,
+			expiresAt: refreshExpiresAt,
+		},
+	});
+
+	setCookie(c, "refreshToken", newRefreshToken, refreshTokenCookieOptions);
+
+	return c.json(
+		createSuccessResponse({
+			data: {
+				accessToken,
+				refreshToken: newRefreshToken,
+			},
+		}),
+		200
+	);
 });
+auth.get(
+	"/me",
+	(c, next) => authMiddleware(c, next),
+	async (c) => {
+		const user = c.get("user");
+
+		if (!user) {
+			return c.json(
+				createErrorResponse({
+					message: "Пользователь не найден",
+				}),
+				404
+			);
+		}
+
+		return c.json(
+			createSuccessResponse({
+				data: {
+					...user,
+				},
+			}),
+			200
+		);
+	}
+);
