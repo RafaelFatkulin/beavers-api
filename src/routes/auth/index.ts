@@ -15,7 +15,6 @@ import {
 } from "../../helpers";
 import { generateTokens, refreshTokenCookieOptions } from "./auth.handler";
 import { authMiddleware } from "../../middleware/bearerAuth";
-import { User } from "@prisma/client";
 
 export const auth = new Hono<{ Variables: { user: unknown } }>().basePath(
 	"/auth"
@@ -38,8 +37,6 @@ auth.post("/signup", zValidator("json", signupSchema), async (c) => {
 			400
 		);
 	}
-
-	console.log(fullName, email, password, role);
 
 	const user = await prisma.user.create({
 		data: {

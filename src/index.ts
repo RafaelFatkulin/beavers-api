@@ -49,4 +49,7 @@ app.notFound((c) => {
 	return c.json(createErrorResponse({ message: "Route not found" }), 404);
 });
 
-export default app;
+export default {
+	port: 8000,
+	fetch: app.fetch,
+};
