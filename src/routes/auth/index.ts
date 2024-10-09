@@ -85,6 +85,8 @@ auth.post("/signup", zValidator("json", signupSchema), async (c) => {
 auth.post("/signin", zValidator("json", signinSchema), async (c) => {
 	const { email, password } = c.req.valid("json");
 
+	console.log(email, password);
+
 	const user = await prisma.user.findUnique({
 		where: {
 			email,
@@ -143,11 +145,8 @@ auth.post("/signin", zValidator("json", signinSchema), async (c) => {
 
 auth.post("/signout", zValidator("json", signoutSchema), async (c) => {
 	const { refreshToken } = c.req.valid("json");
-	const refreshTokenCookie = getCookie(c, "refreshToken");
 
-	const tokenToRefresh = refreshTokenCookie || refreshToken;
-
-	if (!tokenToRefresh) {
+	if (!refreshToken) {
 		return c.json(
 			createErrorResponse({
 				message: "",
@@ -158,7 +157,7 @@ auth.post("/signout", zValidator("json", signoutSchema), async (c) => {
 
 	const existingRefreshToken = await prisma.refreshToken.findFirst({
 		where: {
-			token: tokenToRefresh,
+			token: refreshToken,
 		},
 	});
 
@@ -189,8 +188,6 @@ auth.post("/signout", zValidator("json", signoutSchema), async (c) => {
 		);
 	}
 
-	deleteCookie(c, "refreshToken", refreshTokenCookieOptions);
-
 	return c.json(
 		createSuccessResponse({
 			data: null,
@@ -202,11 +199,11 @@ auth.post("/signout", zValidator("json", signoutSchema), async (c) => {
 
 auth.post("/refresh", zValidator("json", refreshSchema), async (c) => {
 	const { refreshToken } = c.req.valid("json");
-	const refreshTokenCookie = getCookie(c, "refreshToken");
 
-	const tokenToRefresh = refreshTokenCookie || refreshToken;
+	console.log("@came", refreshToken);
 
-	if (!tokenToRefresh) {
+	if (!refreshToken) {
+		console.log("token not provided");
 		return c.json(
 			createErrorResponse({
 				message: "You need a valid refresh token",
@@ -217,9 +214,11 @@ auth.post("/refresh", zValidator("json", refreshSchema), async (c) => {
 
 	const existingRefreshToken = await prisma.refreshToken.findFirst({
 		where: {
-			token: tokenToRefresh,
+			token: refreshToken,
 		},
 	});
+
+	console.log("@@existing", existingRefreshToken);
 
 	if (!existingRefreshToken || existingRefreshToken.revoked) {
 		return c.json(
@@ -236,7 +235,11 @@ auth.post("/refresh", zValidator("json", refreshSchema), async (c) => {
 		},
 	});
 
+	console.log("@@user-by-token", user);
+
 	if (!user) {
+		console.log("user not-found");
+
 		return c.json(
 			createErrorResponse({
 				message: "You need a valid refresh token",
@@ -256,23 +259,31 @@ auth.post("/refresh", zValidator("json", refreshSchema), async (c) => {
 			id: existingRefreshToken.id,
 		},
 		data: {
+			revoked: true,
+		},
+	});
+
+	const newToken = await prisma.refreshToken.create({
+		data: {
+			userId: user.id,
 			token: newRefreshToken,
 			expiresAt: refreshExpiresAt,
 		},
 	});
 
-	setCookie(c, "refreshToken", newRefreshToken, refreshTokenCookieOptions);
+	console.log("@new", newToken.token);
 
 	return c.json(
 		createSuccessResponse({
 			data: {
 				accessToken,
-				refreshToken: newRefreshToken,
+				refreshToken: newToken.token,
 			},
 		}),
 		200
 	);
 });
+
 auth.get(
 	"/me",
 	(c, next) => authMiddleware(c, next),

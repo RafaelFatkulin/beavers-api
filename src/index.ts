@@ -14,7 +14,7 @@ app.use("*", prettyJSON());
 app.use(
 	"*",
 	cors({
-		origin: "*",
+		origin: "http://localhost:3000",
 		allowMethods: ["POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS"],
 	})
 );

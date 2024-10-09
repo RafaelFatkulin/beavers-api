@@ -1,12 +1,14 @@
 import { Role } from "@prisma/client";
 import { sign } from "hono/jwt";
+import { CookieOptions } from "hono/utils/cookie";
 
 export const generateTokens = async (id: number, role: Role) => {
 	const accessToken = await sign(
 		{
 			id,
 			role,
-			exp: Math.floor(Date.now() / 1000) + 60 * 5, // 5 minutes
+			// exp: Math.floor(Date.now() / 1000) + 60 * 5, // 5 minutes
+			exp: Math.floor(Date.now() / 1000) + 10, // 5 minutes
 		},
 		Bun.env.ACCESS_SECRET!
 	);
@@ -29,7 +31,11 @@ export const generateTokens = async (id: number, role: Role) => {
 	};
 };
 
-export const refreshTokenCookieOptions = {
+export const refreshTokenCookieOptions: CookieOptions = {
 	httpOnly: true,
-	maxAge: 60 * 60 * 24 * 7, // 7 days
+	secure: false,
+	maxAge: 60 * 60 * 24 * 7,
+	path: "/",
+	sameSite: "none",
+	domain: ".localhost",
 };
