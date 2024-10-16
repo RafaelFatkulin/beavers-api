@@ -36,6 +36,6 @@ export const refreshTokenCookieOptions: CookieOptions = {
 	secure: false,
 	maxAge: 60 * 60 * 24 * 7,
 	path: "/",
-	sameSite: "none",
+	sameSite: "None",
 	domain: ".localhost",
 };

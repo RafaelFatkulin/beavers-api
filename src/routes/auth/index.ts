@@ -182,7 +182,7 @@ auth.post("/signout", zValidator("json", signoutSchema), async (c) => {
 	if (!success) {
 		return c.json(
 			createErrorResponse({
-				message: "",
+				message: "Произошла неизвестная ошибка",
 			}),
 			400
 		);
@@ -215,12 +215,13 @@ auth.post("/refresh", zValidator("json", refreshSchema), async (c) => {
 	const existingRefreshToken = await prisma.refreshToken.findFirst({
 		where: {
 			token: refreshToken,
+			revoked: false,
 		},
 	});
 
 	console.log("@@existing", existingRefreshToken);
 
-	if (!existingRefreshToken || existingRefreshToken.revoked) {
+	if (!existingRefreshToken) {
 		return c.json(
 			createErrorResponse({
 				message: "You need a valid refresh token",
