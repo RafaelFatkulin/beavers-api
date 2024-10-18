@@ -8,27 +8,23 @@ import {
 } from "../../helpers";
 import { zValidator } from "@hono/zod-validator";
 import { createUserSchema, updateUserSchema } from "./user.schema";
-import { jwt } from "hono/jwt";
 import { HTTPException } from "hono/http-exception";
 import { authMiddleware } from "../../middleware/bearerAuth";
 
 export const users = new Hono().basePath("/users");
 
 users
-	.use("*", (c, next) => authMiddleware(c, next, ['ADMIN', 'MANAGER']))
-	.get("/", 
-		async (c) => {
-			console.log(c.get('jwtPayload'));
-			
-			return c.json(
-				createSuccessResponse({
-					data: excludeFromList(await prisma.user.findMany(), [
-						"password",
-						"updatedAt",
-						"createdAt",
-					]),
-				})
-			);
+	.use("*", (c, next) => authMiddleware(c, next, ["ADMIN", "MANAGER"]))
+	.get("/", async (c) => {
+		return c.json(
+			createSuccessResponse({
+				data: excludeFromList(await prisma.user.findMany(), [
+					"password",
+					"updatedAt",
+					"createdAt",
+				]),
+			})
+		);
 	})
 	.get("/:id", async (c) => {
 		const user = await prisma.user.findUnique({

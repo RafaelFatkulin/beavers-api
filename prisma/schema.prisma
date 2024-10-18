@@ -41,3 +41,25 @@ model RefreshToken {
 
   @@map("refresh_tokens")
 }
+
+model Category {
+  id          Int    @id @default(autoincrement())
+  title       String
+  description String @db.Text()
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("categories")
+}
+
+model Product {
+  id          Int    @id @default(autoincrement())
+  title       String
+  description String @db.VarChar(255)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("products")
+}
