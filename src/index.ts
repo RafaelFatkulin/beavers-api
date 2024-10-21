@@ -1,11 +1,12 @@
+import { auth } from "@modules/auth";
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import { cors } from "hono/cors";
-import { users } from "./routes/user";
-import { auth } from "./routes/auth";
-import { createErrorResponse } from "./helpers";
 import { HTTPException } from "hono/http-exception";
+import { users } from "@modules/user";
+import { createErrorResponse } from "@core/helpers";
+import { category } from "@modules/category";
 
 const app = new Hono();
 
@@ -19,8 +20,9 @@ app.use(
 	})
 );
 
-app.route("/", users);
-app.route("/", auth);
+app.route("/users", users);
+app.route("/auth", auth);
+app.route("/categories", category);
 
 app.onError((err, c) => {
 	if (err instanceof HTTPException) {
@@ -34,7 +36,10 @@ app.onError((err, c) => {
 		}
 
 		if (status === 403) {
-			return c.json(createErrorResponse({ message: "Forbidden" }), status);
+			return c.json(
+				createErrorResponse({ message: "Недостаточно прав для действия" }),
+				status
+			);
 		}
 
 		if (status === 404) {

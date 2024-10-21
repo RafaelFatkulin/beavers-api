@@ -7,8 +7,7 @@ export const generateTokens = async (id: number, role: Role) => {
 		{
 			id,
 			role,
-			// exp: Math.floor(Date.now() / 1000) + 60 * 5, // 5 minutes
-			exp: Math.floor(Date.now() / 1000) + 10, // 5 minutes
+			exp: Math.floor(Date.now() / 1000) + 60 * 15, // 5 minutes
 		},
 		Bun.env.ACCESS_SECRET!
 	);

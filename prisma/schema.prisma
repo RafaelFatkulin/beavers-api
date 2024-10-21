@@ -23,6 +23,7 @@ model User {
   role     Role    @default(MANAGER)
 
   tokens RefreshToken[]
+  orders OrderManagers[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -44,8 +45,10 @@ model RefreshToken {
 
 model Category {
   id          Int    @id @default(autoincrement())
-  title       String
+  title       String @unique
   description String @db.Text()
+
+  products Product[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -57,9 +60,78 @@ model Product {
   id          Int    @id @default(autoincrement())
   title       String
   description String @db.VarChar(255)
+  unit        String
+
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int      @map("category_id")
+
+  prices ProductPrices[]
+  orders OrderProducts[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("products")
+}
+
+model ProductPrices {
+  id Int @id @default(autoincrement())
+
+  price         Float
+  effectiveDate DateTime @default(now()) @map("effective_date")
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int     @map("product_id")
+
+  @@map("product_prices")
+}
+
+model Order {
+  id         Int         @id @default(autoincrement())
+  status     OrderStatus
+  totalPrice Float       @map("total_price")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  managers OrderManagers[]
+  products OrderProducts[]
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  NEW
+  PROCESSING
+  DELIVERED
+  CANCELLED
+}
+
+model OrderManagers {
+  id Int @id @default(autoincrement())
+
+  order   Order @relation(fields: [orderId], references: [id])
+  orderId Int   @map("order_id")
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @map("user_id")
+
+  isPrimary Boolean @default(true) @map("is_primary")
+
+  @@map("order_managers")
+}
+
+model OrderProducts {
+  id Int @id @default(autoincrement())
+
+  order   Order @relation(fields: [orderId], references: [id])
+  orderId Int   @map("order_id")
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int     @map("product_id")
+
+  quantity Float
+  price    Float
+
+  @@map("order_products")
 }
