@@ -8,7 +8,11 @@ import {
 } from "./auth.schema";
 import { createUser, getUserByEmail, getUserById } from "@modules/user";
 import { HTTPException } from "hono/http-exception";
-import { generateTokens, refreshTokenCookieOptions } from "./auth.handler";
+import {
+	accessTokenCookieOptions,
+	generateTokens,
+	refreshTokenCookieOptions,
+} from "./auth.handler";
 import {
 	createRefreshToken,
 	getRefreshToken,
@@ -65,6 +69,7 @@ auth
 	})
 	.post("/signin", zValidator("json", signinSchema), async (c) => {
 		const { email, password } = c.req.valid("json");
+		console.log({ email, password });
 
 		const user = await getUserByEmail(email);
 
@@ -86,7 +91,7 @@ auth
 			});
 		}
 
-		const { accessToken, refreshToken, refreshExpiresAt } =
+		const { accessToken, refreshToken, accessExpiresAt, refreshExpiresAt } =
 			await generateTokens(user.id, user.role);
 
 		await createRefreshToken({
@@ -95,6 +100,7 @@ auth
 			expiresAt: refreshExpiresAt,
 		});
 
+		setCookie(c, "accessToken", accessToken, accessTokenCookieOptions);
 		setCookie(c, "refreshToken", refreshToken, refreshTokenCookieOptions);
 
 		return c.json(
