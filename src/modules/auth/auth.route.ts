@@ -63,7 +63,7 @@ auth
 		return c.json(
 			createSuccessResponse({
 				message: "Регистрация прошла успешно",
-				data: { accessToken, refreshToken },
+				data: { accessToken, refreshToken, user },
 			})
 		);
 	})
@@ -105,7 +105,7 @@ auth
 
 		return c.json(
 			createSuccessResponse({
-				data: { accessToken, refreshToken },
+				data: { accessToken, refreshToken, user },
 			})
 		);
 	})
