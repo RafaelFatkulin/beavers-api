@@ -17,7 +17,7 @@ export const category = new Hono();
 category
 	.get(
 		"/",
-		(c, next) => authMiddleware(c, next),
+		(c, next) => authMiddleware(c, next, ["ADMIN"]),
 		async (c) => {
 			const categories = await getAllCategories();
 

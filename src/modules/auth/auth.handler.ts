@@ -7,7 +7,7 @@ export const generateTokens = async (id: number, role: Role) => {
 		{
 			id,
 			role,
-			exp: Math.floor(Date.now() / 1000) + 60 * 5, // 5 minutes
+			exp: Math.floor(Date.now() / 1000) + 15, // 5 minutes
 		},
 		Bun.env.ACCESS_SECRET!
 	);
@@ -21,7 +21,7 @@ export const generateTokens = async (id: number, role: Role) => {
 		Bun.env.REFRESH_SECRET!
 	);
 
-	const accessExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+	const accessExpiresAt = new Date(Date.now() + 15 * 1000);
 	const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
 	return {

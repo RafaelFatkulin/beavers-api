@@ -18,7 +18,6 @@ import {
 	getRefreshToken,
 	revokeRefreshToken,
 } from "./auth.service";
-import { setCookie } from "hono/cookie";
 import { createSuccessResponse } from "../core/helpers";
 import { authMiddleware } from "./auth.middleware";
 
@@ -58,7 +57,7 @@ auth
 			expiresAt: refreshExpiresAt,
 		});
 
-		setCookie(c, "refreshToken", refreshToken, refreshTokenCookieOptions);
+		// setCookie(c, "refreshToken", refreshToken, refreshTokenCookieOptions);
 
 		return c.json(
 			createSuccessResponse({
@@ -100,8 +99,8 @@ auth
 			expiresAt: refreshExpiresAt,
 		});
 
-		setCookie(c, "accessToken", accessToken, accessTokenCookieOptions);
-		setCookie(c, "refreshToken", refreshToken, refreshTokenCookieOptions);
+		// setCookie(c, "accessToken", accessToken, accessTokenCookieOptions);
+		// setCookie(c, "refreshToken", refreshToken, refreshTokenCookieOptions);
 
 		return c.json(
 			createSuccessResponse({
@@ -113,7 +112,7 @@ auth
 		const { refreshToken } = c.req.valid("json");
 
 		if (!refreshToken) {
-			throw new HTTPException(400, {
+			throw new HTTPException(401, {
 				message: "Вам нужен действительный токен обновления",
 			});
 		}
@@ -121,7 +120,7 @@ auth
 		const existingRefreshToken = await getRefreshToken(refreshToken);
 
 		if (!existingRefreshToken || existingRefreshToken.revoked) {
-			throw new HTTPException(400, {
+			throw new HTTPException(401, {
 				message: "Токен обновления не существует",
 			});
 		}
@@ -138,7 +137,7 @@ auth
 		const { refreshToken } = c.req.valid("json");
 
 		if (!refreshToken) {
-			throw new HTTPException(400, {
+			throw new HTTPException(401, {
 				message: "Вам нужен действительный токен обновления",
 			});
 		}
@@ -146,7 +145,7 @@ auth
 		const existingRefreshToken = await getRefreshToken(refreshToken, false);
 
 		if (!existingRefreshToken) {
-			throw new HTTPException(400, {
+			throw new HTTPException(401, {
 				message: "Вам нужен действительный токен обновления",
 			});
 		}
@@ -154,7 +153,7 @@ auth
 		const user = await getUserById(existingRefreshToken.userId);
 
 		if (!user) {
-			throw new HTTPException(400, {
+			throw new HTTPException(401, {
 				message: "Вам нужен действительный токен обновления",
 			});
 		}
