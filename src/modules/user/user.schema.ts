@@ -20,11 +20,16 @@ export const createUserSchema = z.object({
 	fullName: fullNameSchema,
 	email: emailSchema,
 	password: passwordSchema,
-	role: userRoleSchema.optional(),
+	role: userRoleSchema.optional()
 });
 
 export const updateUserSchema = z.object({
 	fullName: fullNameSchema.optional(),
 	email: emailSchema.optional(),
-	role: userRoleSchema.optional(),
+	role: userRoleSchema.optional()
+});
+
+export const searchUserSchema = z.object({
+	q: z.string().optional(),
+	role: userRoleSchema.or(z.enum(["ALL"])).optional()
 });

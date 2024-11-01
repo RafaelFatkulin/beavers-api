@@ -1,4 +1,4 @@
-import { createUserSchema, updateUserSchema } from "./user.schema";
+import { createUserSchema, searchUserSchema, updateUserSchema } from "./user.schema";
 import { createSuccessResponse } from "@core/helpers/response";
 import {
 	createUser,
@@ -6,24 +6,30 @@ import {
 	getAllUsers,
 	getUserByEmail,
 	getUserById,
-	updateUser,
+	searchUsers,
+	updateUser
 } from "./user.service";
 import { authMiddleware } from "@modules/auth";
 import { Hono } from "hono";
 import { excludeFromList, excludeFromObject } from "@core/db";
 import { HTTPException } from "hono/http-exception";
 import { zValidator } from "@hono/zod-validator";
+import { User } from "@prisma/client";
 
 export const users = new Hono();
 
 users
 	.use("*", (c, next) => authMiddleware(c, next, ["ADMIN"]))
-	.get("/", async (c) => {
-		const users = excludeFromList(await getAllUsers(), [
-			"password",
-			"updatedAt",
-			"createdAt",
-		]);
+	.get("/", zValidator("query", searchUserSchema), async (c) => {
+		const { q, role } = c.req.valid("query");
+
+		let users: User[] = [];
+
+		if (q || role) {
+			users = await searchUsers({ q, role: role === "ALL" ? undefined : role });
+		} else {
+			users = await getAllUsers();
+		}
 
 		if (!users.length) {
 			throw new HTTPException(404, { message: "Пользователи не найдены" });
@@ -31,7 +37,7 @@ users
 
 		return c.json(
 			createSuccessResponse({
-				data: users,
+				data: excludeFromList(users, ["password", "createdAt", "updatedAt"])
 			})
 		);
 	})
@@ -51,15 +57,15 @@ users
 
 		if (existingUser) {
 			throw new HTTPException(400, {
-				message: "Пользователь с таким Email уже существует",
+				message: "Пользователь с таким Email уже существует"
 			});
 		}
 
 		const user = await createUser({
 			fullName,
 			email,
-			password,
-			role,
+			password: await Bun.password.hash(password, "bcrypt"),
+			role
 		});
 
 		return c.json(createSuccessResponse({ data: user }));
@@ -80,7 +86,7 @@ users
 			const updatedUser = await updateUser({
 				fullName,
 				email,
-				role,
+				role
 			});
 
 			return c.json(
@@ -88,9 +94,9 @@ users
 					data: excludeFromObject(updatedUser, [
 						"password",
 						"updatedAt",
-						"createdAt",
+						"createdAt"
 					]),
-					message: "Пользователь обновлен",
+					message: "Пользователь обновлен"
 				})
 			);
 		}

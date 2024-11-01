@@ -4,10 +4,10 @@ import {
 	deleteCategory,
 	getAllCategories,
 	getCategoryById,
-	updateCategory,
+	updateCategory
 } from "./category.service";
 import { HTTPException } from "hono/http-exception";
-import { createSuccessResponse } from "../core/helpers";
+import { createSuccessResponse } from "@core/helpers";
 import { authMiddleware } from "@modules/auth";
 import { zValidator } from "@hono/zod-validator";
 import { createCategorySchema, updateCategorySchema } from "./category.schema";
@@ -52,7 +52,7 @@ category
 
 			if (!category) {
 				throw new HTTPException(400, {
-					message: "Произошла ошибка при создании категории",
+					message: "Произошла ошибка при создании категории"
 				});
 			}
 
@@ -75,12 +75,12 @@ category
 
 			const updatedCategory = await updateCategory(existingCategory.id, {
 				title,
-				description,
+				description
 			});
 
 			if (!updatedCategory) {
 				throw new HTTPException(400, {
-					message: "Произошла ошибка при обновлении категории",
+					message: "Произошла ошибка при обновлении категории"
 				});
 			}
 

@@ -7,7 +7,7 @@ export const generateTokens = async (id: number, role: Role) => {
 		{
 			id,
 			role,
-			exp: Math.floor(Date.now() / 1000) + 15, // 5 minutes
+			exp: Math.floor(Date.now() / 1000) + 60 * 15 // 15 minutes
 		},
 		Bun.env.ACCESS_SECRET!
 	);
@@ -16,32 +16,32 @@ export const generateTokens = async (id: number, role: Role) => {
 		{
 			id,
 			role,
-			exp: Math.floor(Date.now() / 1000) * 7 * 24 * 60 * 60, // 7 days
+			exp: Math.floor(Date.now() / 1000) * 7 * 24 * 60 * 60 // 7 days
 		},
 		Bun.env.REFRESH_SECRET!
 	);
 
-	const accessExpiresAt = new Date(Date.now() + 15 * 1000);
+	const accessExpiresAt = new Date(Date.now() + 60 * 15 * 1000);
 	const refreshExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
 	return {
 		accessToken,
 		refreshToken,
 		accessExpiresAt,
-		refreshExpiresAt,
+		refreshExpiresAt
 	};
 };
 
 export const accessTokenCookieOptions: CookieOptions = {
 	httpOnly: true,
 	secure: true,
-	maxAge: 60 * 5,
-	sameSite: "None",
+	maxAge: 60 * 15,
+	sameSite: "None"
 };
 
 export const refreshTokenCookieOptions: CookieOptions = {
 	httpOnly: true,
 	secure: true,
 	maxAge: 60 * 60 * 24 * 7,
-	sameSite: "None",
+	sameSite: "None"
 };
