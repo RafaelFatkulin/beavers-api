@@ -51,7 +51,7 @@ users
 		return c.json(createSuccessResponse({ data: user }));
 	})
 	.post("/", zValidator("json", createUserSchema), async (c) => {
-		const { fullName, email, password, role } = c.req.valid("json");
+		const { fullName, email, role } = c.req.valid("json");
 
 		const existingUser = await getUserByEmail(email);
 
@@ -64,11 +64,10 @@ users
 		const user = await createUser({
 			fullName,
 			email,
-			password: await Bun.password.hash(password, "bcrypt"),
 			role
 		});
 
-		return c.json(createSuccessResponse({ data: user }));
+		return c.json(createSuccessResponse({ message: `Пользователь с почтой ${user.email} создан` }));
 	})
 	.on(
 		["PATCH", "PUT"],

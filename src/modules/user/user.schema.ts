@@ -19,7 +19,6 @@ export const userRoleSchema = z.enum(["ADMIN", "MANAGER", "LOGISTICIAN"]);
 export const createUserSchema = z.object({
 	fullName: fullNameSchema,
 	email: emailSchema,
-	password: passwordSchema,
 	role: userRoleSchema.optional()
 });
 
