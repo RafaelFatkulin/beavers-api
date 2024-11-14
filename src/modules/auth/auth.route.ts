@@ -9,23 +9,21 @@ import {
 import { createUser, getUserByEmail, getUserById } from "@modules/user";
 import { HTTPException } from "hono/http-exception";
 import {
-	accessTokenCookieOptions,
 	generateTokens,
-	refreshTokenCookieOptions,
 } from "./auth.handler";
 import {
 	createRefreshToken,
 	getRefreshToken,
 	revokeRefreshToken,
 } from "./auth.service";
-import { createSuccessResponse } from "../core/helpers";
+import { createSuccessResponse } from "@core/helpers";
 import { authMiddleware } from "./auth.middleware";
 
 export const auth = new Hono<{ Variables: { user: unknown } }>();
 
 auth
 	.post("/signup", zValidator("json", signupSchema), async (c) => {
-		const { fullName, email, password, role } = c.req.valid("json");
+		const { fullName, email, role } = c.req.valid("json");
 
 		const existingUser = await getUserByEmail(email);
 
@@ -38,7 +36,6 @@ auth
 		const user = await createUser({
 			fullName,
 			email,
-			password,
 			role,
 		});
 
@@ -90,7 +87,7 @@ auth
 			});
 		}
 
-		const { accessToken, refreshToken, accessExpiresAt, refreshExpiresAt } =
+		const { accessToken, refreshToken, refreshExpiresAt } =
 			await generateTokens(user.id, user.role);
 
 		await createRefreshToken({
@@ -98,9 +95,6 @@ auth
 			userId: user.id,
 			expiresAt: refreshExpiresAt,
 		});
-
-		// setCookie(c, "accessToken", accessToken, accessTokenCookieOptions);
-		// setCookie(c, "refreshToken", refreshToken, refreshTokenCookieOptions);
 
 		return c.json(
 			createSuccessResponse({

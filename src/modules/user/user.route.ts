@@ -82,7 +82,7 @@ users
 				throw new HTTPException(404, { message: "Пользователь не найден" });
 			}
 
-			const updatedUser = await updateUser({
+			const updatedUser = await updateUser(existingUser.id, {
 				fullName,
 				email,
 				role
