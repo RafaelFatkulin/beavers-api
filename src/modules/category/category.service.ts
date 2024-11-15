@@ -15,9 +15,9 @@ export const getCategoryByTitle = async (title: string) => {
 
 export const createCategory = async ({
 	title,
-	description = "",
+	description = ""
 }: CreateCategory) => {
-	return await prisma.category.create({ data: { title, description } });
+	return prisma.category.create({ data: { title, description } });
 };
 
 export const updateCategory = async (
@@ -26,7 +26,7 @@ export const updateCategory = async (
 ) => {
 	return await prisma.category.update({
 		where: { id },
-		data: { title, description },
+		data: { title, description }
 	});
 };
 

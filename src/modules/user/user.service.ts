@@ -67,5 +67,6 @@ export const updateUser = async (id: number, { fullName, email, role }: UpdateUs
 	});
 };
 export const deleteUser = async (id: number) => {
+	console.log(`User #${id}`);
 	return prisma.user.delete({ where: { id } });
 };

@@ -56,7 +56,10 @@ category
 				});
 			}
 
-			return c.json(createSuccessResponse({ data: category }));
+			return c.json(createSuccessResponse({
+				data: category,
+				message: `Категория "${category.title}" создана`
+			}));
 		}
 	)
 	.on(

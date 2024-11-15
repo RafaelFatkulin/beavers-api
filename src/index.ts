@@ -15,9 +15,9 @@ app.use("*", prettyJSON());
 app.use(
 	"*",
 	cors({
-		origin: "http://localhost:3000",
+		origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
 		allowMethods: ["POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS"],
-		credentials: true,
+		credentials: true
 	})
 );
 
@@ -57,5 +57,5 @@ app.notFound((c) => {
 
 export default {
 	port: 8000,
-	fetch: app.fetch,
+	fetch: app.fetch
 };
