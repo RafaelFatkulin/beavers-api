@@ -4,6 +4,7 @@ import {
 	deleteCategory,
 	getAllCategories,
 	getCategoryById,
+	getCountOfCategories,
 	updateCategory
 } from "./category.service";
 import { HTTPException } from "hono/http-exception";
@@ -11,6 +12,8 @@ import { createSuccessResponse } from "@core/helpers";
 import { authMiddleware } from "@modules/auth";
 import { zValidator } from "@hono/zod-validator";
 import { createCategorySchema, updateCategorySchema } from "./category.schema";
+import { paginationSchema } from "@core/schemas";
+import { createMeta } from "@core/helpers/create-meta";
 
 export const category = new Hono();
 
@@ -18,14 +21,31 @@ category
 	.get(
 		"/",
 		(c, next) => authMiddleware(c, next, ["ADMIN"]),
+		zValidator("query", paginationSchema),
 		async (c) => {
-			const categories = await getAllCategories();
+			const { page = "1", limit = "10" } = c.req.valid("query");
+
+			const skip = (parseInt(page) - 1) * parseInt(limit);
+
+			const categories = await getAllCategories({
+				skip,
+				take: parseInt(limit)
+			});
+
+			const total = await getCountOfCategories();
 
 			if (!categories.length) {
 				throw new HTTPException(404, { message: "Категории не найдены" });
 			}
 
-			return c.json(createSuccessResponse({ data: categories }));
+			return c.json(createSuccessResponse({
+				data: categories,
+				meta: createMeta({
+					total,
+					page: parseInt(page),
+					limit: parseInt(limit)
+				})
+			}));
 		}
 	)
 	.get(
@@ -69,6 +89,11 @@ category
 		zValidator("json", updateCategorySchema),
 		async (c) => {
 			const { title, description } = c.req.valid("json");
+
+			console.log({
+				title,
+				description
+			});
 
 			const existingCategory = await getCategoryById(Number(c.req.param("id")));
 
