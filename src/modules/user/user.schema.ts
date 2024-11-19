@@ -30,5 +30,5 @@ export const updateUserSchema = z.object({
 
 export const searchUserSchema = z.object({
 	q: z.string().optional(),
-	role: userRoleSchema.or(z.enum(["ALL"])).optional()
+	role: z.union([userRoleSchema, z.literal("ALL")]).optional()
 });

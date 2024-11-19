@@ -1,12 +1,13 @@
-import { auth } from "@modules/auth";
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
-import { users } from "@modules/user";
 import { createErrorResponse } from "@core/helpers";
+import { auth } from "@modules/auth";
+import { users } from "@modules/user";
 import { category } from "@modules/category";
+import { products } from "@modules/products";
 
 const app = new Hono();
 
@@ -24,6 +25,7 @@ app.use(
 app.route("/users", users);
 app.route("/auth", auth);
 app.route("/categories", category);
+app.route("/products", products);
 
 app.onError((err, c) => {
 	if (err instanceof HTTPException) {
@@ -56,6 +58,6 @@ app.notFound((c) => {
 });
 
 export default {
-	port: 8000,
+	port: 8001,
 	fetch: app.fetch
 };
